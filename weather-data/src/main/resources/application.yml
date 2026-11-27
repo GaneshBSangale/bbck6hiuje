@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: weather-sensor-api
+  datasource:
+    # File database under ./data, so readings survive a restart.
+    url: jdbc:h2:file:./data/weather-db
+    username: sa
+    password: ""
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks the entities match it.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+  jackson:
+    serialization:
+      indent-output: true
+    read:
+      # A metric sent twice in one report is rejected instead of the last value silently winning.
+      strict-duplicate-detection: true
+    mapper:
+      # Values must be JSON numbers; "21.5" as text is rejected.
+      allow-coercion-of-scalars: false
+    factory:
+      constraints:
+        read:
+          # Sensor reports are tiny, so oversized bodies and names are rejected early.
+          max-document-length: 16384
+          max-name-length: 64
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  # Every successful response is JSON, so the docs say so instead of "*/*".
+  default-produces-media-type: application/json
+  swagger-ui:
+    path: /swagger-ui.html
